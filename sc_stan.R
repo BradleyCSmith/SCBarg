@@ -1,7 +1,7 @@
 ################################################################################
 ###
 ###
-###   Stan script for 
+###   Supreme Court bargaining - Estimation 
 ###   Authors: Brad Smith
 ###
 ###
@@ -18,23 +18,17 @@ options(mc.cores = parallel::detectCores())
 
 setwd("~/Google Drive/Research/Supreme Court Bargaining")
 
-data <- read.csv("Data/AllIdealPoints.csv")
+data <- load("Data/stan_ss_data.RData")
 
-# For now, eliminate all observations without 9 justices 
-data <- data[complete.cases(data),]
 
-# Create a series of objects to pass to Stan
-X <- as.matrix(data[,c("J1", "J2", "J3", "J4",           # Ideal points
-                       "J5", "J6", "J7", "J8", "J9")])
+N <- ncol(d)
+k <- max(id)
 
-O <- as.matrix(data[,c("Opinion")]) # Opinion
-
-N <- ncol(X)
-
-stan.data <- list(X = X, #justice ideal points (Nx9)
-                  O = O, #opinions
-                  N = N
-                  #number of obs
+stan.data <- list(d  = d,   #justice ideal points (Nx9)
+                  id = id,  #justice identifiers 
+                  o  = o,   #opinions
+                  N  = N,   #number of obs
+                  k = k     #number of unique justices
 )
 
 scstan <- '
@@ -81,11 +75,13 @@ vector eqoffer(vector x, real q, vector r){
          L[i] <- B[i]>=E[i];
       }
       
+      //upper and lower bound of win set
       for(i in 1:9)
       UB[i] <- x[5] + sqrt(-E[i]);
       for(i in 1:9)
       LB[i] <- x[5] - sqrt(-E[i]);
       
+      //back out proposals, comparing locations to win set
       for(i in 1:9)
       EO[i] <- L[i]*x[i] + (1-L[i])*((x[i]<LB[i])*LB[i]+(x[i]>UB[i])*UB[i]);
       
@@ -93,14 +89,19 @@ return(EO);
 } 
 }
 data{
-int<lower=1> N; //number of cases
-matrix[N,9] X;  //justice ideal points
-matrix[N,1] O;  //opinions 
+int<lower=1> N;   //number of cases
+matrix[N,9] d;    //justice ideal points
+int id[N,9];      //justice identifiers
+matrix[N,1] o;    //opinions
+int<lower=1> k ;  //unique justices
 }
 parameters{
-vector[9] rho;    //vector of influence parameters
+vector[k] rho;    //vector of influence parameters
+vector[N] quo;    //vector of status quo means
 }
-model{}
+model{
+
+}
 '
 
 expose_stan_functions(stanc(model_code = scstan))
