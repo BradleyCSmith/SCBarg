@@ -38,7 +38,7 @@ for(i in 1:nrow(s)){
 }
 
 # Pull out outcomes
-x <- as.vector(s$Opinion)
+o <- as.vector(s$Opinion)
 
 #Create an object where we assign each justice a unique ID and associate those 
 #with entries in d
@@ -57,5 +57,5 @@ for(i in 1:nrow(id)){
 }
 
 # Clear the workspace and save output 
-rm(list = setdiff(ls(), c("d", "id", "k", "x")))
+rm(list = setdiff(ls(), c("d", "id", "k", "o")))
 save.image("~/Google Drive/Research/Supreme Court Bargaining/Data/stan_ss_data.RData")
